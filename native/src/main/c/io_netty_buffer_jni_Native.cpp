@@ -16,6 +16,8 @@
 #include <jni.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/epoll.h>
+#include <unistd.h>
 #include "javautilities.h"
 #include "io_netty_buffer_jni_Native.h"
 
@@ -56,5 +58,33 @@ JNIEXPORT jobject JNICALL Java_io_netty_buffer_jni_Native_allocateDirectBuffer(J
 
   jobject directBuffer = env->NewDirectByteBuffer(mem, size);
   return directBuffer;
+}
+
+JNIEXPORT jint JNICALL Java_io_netty_buffer_jni_Native_epollCreate(JNIEnv * env, jclass clazz, jint size)
+{
+  int epollFD = epoll_create(size);
+
+  if (epollFD < 0)
+  {
+     throwRuntimeException(env, "Error initializing epoll");
+     // I know the main branch is already returning this
+     // but I'm keeping the return here anyways, so
+     // case someone expands this function it would be
+     // guranteed the code will return here.
+     return epollFD;
+  }
+
+  return epollFD;
+}
+
+JNIEXPORT void JNICALL Java_io_netty_buffer_jni_Native_epollClose(JNIEnv * env, jclass clazz, jint fd)
+{
+   if (close(fd) < 0)
+   {
+      throwRuntimeException(env, "Error closing file descriptor for epoll");
+      return;
+   }
+
+   return;
 }
 

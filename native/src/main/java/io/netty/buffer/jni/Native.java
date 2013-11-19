@@ -36,10 +36,19 @@ final class Native {
 
     /**
      * Refer to linux man-pages on epoll. this directly translates as epoll_create
-     * @param size
-     * @return
+     *
+     * @param size The size passed to epollCreate
+     * @return the file descriptor that must be closed with {@link Native#epollClose(int)}
      */
     public static native int epollCreate(int size);
+
+   /**
+    * Refer to linux man-pages on close, this translates directly as close
+    * Even though close will close any fd, we will keep it a separate method to be exclusively used with epoll
+    *  operations
+    * @param fd
+    */
+    public static native void epollClose(int fd);
 
     private Native() {
     }

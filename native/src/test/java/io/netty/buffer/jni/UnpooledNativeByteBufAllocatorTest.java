@@ -18,13 +18,10 @@ package io.netty.buffer.jni;
 
 import io.netty.buffer.AbstractByteBufTest;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -57,28 +54,18 @@ public class UnpooledNativeByteBufAllocatorTest extends AbstractByteBufTest {
    // It's important to validate for exceptions, as these things could crash the VM
    @Test
    public void testExceptions() {
-      boolean exThrown = false;
-
-      exThrown = false;
-
       try {
          Native.allocateDirectBuffer(0);
+         Assert.fail("Exception was expected");
       } catch (RuntimeException e) {
-         e.printStackTrace();
-         exThrown = true;
+         // expected
       }
-
-      assertTrue("the native layer could allocate a buffer size of 0?", exThrown);
-
-      exThrown = false;
 
       try {
          Native.allocateDirectBuffer(-10);
+         Assert.fail("Exception was expected");
       } catch (RuntimeException e) {
-         e.printStackTrace();
-         exThrown = true;
+         // expected
       }
-
-      assertTrue("the native layer could allocate a negative buffer size?", exThrown);
    }
 }
