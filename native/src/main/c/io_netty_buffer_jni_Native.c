@@ -15,6 +15,7 @@
  */
 #include <jni.h>
 #include <stdlib.h>
+#include "javautilities.h"
 #include "io_netty_buffer_jni_Native.h"
 
 
@@ -26,6 +27,18 @@ JNIEXPORT void JNICALL Java_io_netty_buffer_jni_Native_freeDirectBuffer(JNIEnv *
 
 JNIEXPORT jobject JNICALL Java_io_netty_buffer_jni_Native_allocateDirectBuffer(JNIEnv *env, jclass clazz, jint size) {
   void *mem = malloc(size);
+
+  if (mem == null)
+  {
+     throwRuntimeException(env, "Error allocating native buffer. Probably not enough memory to allocate buffer");
+     return;
+  }
+
+  // It is a good practice to zero the buffers since malloc won't guarantee zeroes.
+  // However we may remove this if not needed
+  memset(buffer, 0, (size_t)size);
+
   jobject directBuffer = (*env)->NewDirectByteBuffer(env, mem, size);
   return directBuffer;
 }
+
