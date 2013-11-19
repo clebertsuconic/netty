@@ -26,6 +26,8 @@ JNIEXPORT void JNICALL Java_io_netty_buffer_jni_Native_freeDirectBuffer(JNIEnv *
 }
 
 JNIEXPORT jobject JNICALL Java_io_netty_buffer_jni_Native_allocateDirectBuffer(JNIEnv *env, jclass clazz, jint size) {
+
+  // TODO: most functions on libaio require 512 bytes alignment ... wouldn't be the case also with some network io functions?
   void *mem = malloc(size);
 
   if (mem == null)
