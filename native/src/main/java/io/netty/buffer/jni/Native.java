@@ -28,8 +28,18 @@ final class Native {
         NarSystem.loadLibrary();
     }
 
+    // Buffer functions
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native ByteBuffer allocateDirectBuffer(int size);
+
+    // epoll functions
+
+    /**
+     * Refer to linux man-pages on epoll. this directly translates as epoll_create
+     * @param size
+     * @return
+     */
+    public static native int epollCreate(int size);
 
     private Native() {
     }
