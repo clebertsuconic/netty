@@ -59,6 +59,7 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_init
 
     if (io_queue_init(queueSize, libaioContext))
     {
+        // Error, so need to release whatever was done before
         free(libaioContext);
         return NULL;
     }
