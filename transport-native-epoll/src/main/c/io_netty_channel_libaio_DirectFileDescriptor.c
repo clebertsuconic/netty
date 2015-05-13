@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include "io_netty_channel_libaio_DirectFileDescriptor.h"
 
 
@@ -52,7 +53,7 @@ JNIEXPORT int JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_open(JNI
 }
 
 
-JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_initQueue(JNIEnv * env, jclass clazz, jint queueSize) {
+JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_initContext(JNIEnv * env, jclass clazz, jint queueSize) {
 
     io_context_t * libaioContext = (io_context_t *) malloc (sizeof(io_context_t));
 
