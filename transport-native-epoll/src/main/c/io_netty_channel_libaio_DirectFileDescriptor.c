@@ -63,6 +63,6 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_init
         return NULL;
     }
 
-    jobject bufferContext = env->NewDirectByteBuffer(libaioContext, queueSize);
+    jobject bufferContext = (*env)->NewDirectByteBuffer(libaioContext, queueSize);
     return bufferContext;
 }
