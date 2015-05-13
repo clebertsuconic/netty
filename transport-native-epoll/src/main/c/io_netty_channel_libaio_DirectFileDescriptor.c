@@ -53,7 +53,7 @@ JNIEXPORT int JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_open(JNI
 }
 
 
-JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_initContext(JNIEnv * env, jclass clazz, jint queueSize) {
+JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_initContext(JNIEnv* env, jclass clazz, jint queueSize) {
 
     io_context_t * libaioContext = (io_context_t *) malloc (sizeof(io_context_t));
 
@@ -63,6 +63,6 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_init
         return NULL;
     }
 
-    jobject bufferContext = (*env)->NewDirectByteBuffer(libaioContext, queueSize);
+    jobject bufferContext = (*env)->NewDirectByteBuffer(env, libaioContext, queueSize);
     return bufferContext;
 }
