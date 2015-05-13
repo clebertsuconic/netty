@@ -57,7 +57,7 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_init
 
     io_context_t * libaioContext = (io_context_t *) malloc (sizeof(io_context_t));
 
-    if (io_queue_init(queueSize, &libaioQueue))
+    if (io_queue_init(queueSize, libaioContext))
     {
         free(libaioContext);
         return NULL;
