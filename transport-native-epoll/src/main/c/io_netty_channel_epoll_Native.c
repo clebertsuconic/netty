@@ -33,6 +33,7 @@
 #include <stddef.h>
 #include <limits.h>
 #include "io_netty_channel_epoll_Native.h"
+#include "exception_helper.h"
 
 /**
  * On older Linux kernels, epoll can't handle timeout
@@ -93,25 +94,25 @@ static int socketType;
 static const char* ip4prefix = "::ffff:";
 
 // util methods
-static inline void throwRuntimeException(JNIEnv* env, char* message) {
+void throwRuntimeException(JNIEnv* env, char* message) {
     (*env)->ThrowNew(env, runtimeExceptionClass, message);
 }
 
-static inline void throwIOException(JNIEnv* env, char* message) {
+void throwIOException(JNIEnv* env, char* message) {
     (*env)->ThrowNew(env, ioExceptionClass, message);
 }
 
-static inline void throwClosedChannelException(JNIEnv* env) {
+void throwClosedChannelException(JNIEnv* env) {
     jobject exception = (*env)->NewObject(env, closedChannelExceptionClass, closedChannelExceptionMethodId);
     (*env)->Throw(env, exception);
 }
 
-static inline void throwOutOfMemoryError(JNIEnv* env) {
+void throwOutOfMemoryError(JNIEnv* env) {
     jclass exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
     (*env)->ThrowNew(env, exceptionClass, "");
 }
 
-static inline char* exceptionMessage(char* msg, int error) {
+char* exceptionMessage(char* msg, int error) {
     char* err = strerror(error);
     char* result = malloc(strlen(msg) + strlen(err) + 1);
     strcpy(result, msg);

@@ -13,10 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <jni.h>
 
-int Java_io_netty_channel_unix_FileDescriptor_close(JNIEnv* env, jclass clazz, jint fd);
-int Java_io_netty_channel_unix_FileDescriptor_open(JNIEnv* env, jclass clazz, jstring path);
-JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_freeContext
-  (JNIEnv *, jclass, jobject);
-
+/**
+ * *
+ * This packages handles Linux libaio at a low level.
+ * Buffers needs to be specially allocated as they need to be aligned to 512 or 4096
+ *
+ * Three main classes on this package:
+ * {@link io.netty.channel.libaio.DirectFileDescriptorController} which will handle the native methods and the queue
+ * {@link io.netty.channel.libaio.DirectFileDescriptor} which represents the file itself
+ * {@link io.netty.channel.libaio.ErrorInfo} to be placed on the callback results in case of errors.
+ */
+package io.netty.channel.libaio;
