@@ -13,10 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <jni.h>
 
-int Java_io_netty_channel_unix_FileDescriptor_close(JNIEnv* env, jclass clazz, jint fd);
-int Java_io_netty_channel_unix_FileDescriptor_open(JNIEnv* env, jclass clazz, jstring path);
-JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_freeContext
-  (JNIEnv *, jclass, jobject);
-
+/**
+ * Linux specific libaio features.
+ */
+package io.netty.channel.libaio;
