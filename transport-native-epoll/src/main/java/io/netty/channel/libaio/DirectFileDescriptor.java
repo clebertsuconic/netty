@@ -61,7 +61,7 @@ public final class DirectFileDescriptor extends FileDescriptor {
     }
 
     /**
-     * Open a new {@link FileDescriptor} for the given {@link java.io.File}.
+     * Open a new {@link FileDescriptor} for the given {@link File}.
      */
     public static DirectFileDescriptor from(File file, ByteBuffer context) throws IOException {
         return from(checkNotNull(file, "file").getPath(), context);
@@ -90,7 +90,7 @@ public final class DirectFileDescriptor extends FileDescriptor {
      * @param callback A callback to be returned on the poll method.
      * @throws IOException
      *
-     * @see DirectFileDescriptorController#poll(java.nio.ByteBuffer, Object[], int, int)
+     * @see DirectFileDescriptorController#poll(ByteBuffer, Object[], int, int)
      */
     public void write(long position, int size, ByteBuffer buffer, Object callback) throws IOException {
         DirectFileDescriptorController.submitWrite(this.fd, libaioContext, position, size, buffer, callback);
@@ -110,7 +110,7 @@ public final class DirectFileDescriptor extends FileDescriptor {
      * @param callback A callback to be returned on the poll method.
      * @throws IOException
      *
-     * @see DirectFileDescriptorController#poll(java.nio.ByteBuffer, Object[], int, int)
+     * @see DirectFileDescriptorController#poll(ByteBuffer, Object[], int, int)
      */
     public void read(long position, int size, ByteBuffer buffer, Object callback)  throws IOException {
         DirectFileDescriptorController.submitRead(this.fd, libaioContext, position, size, buffer, callback);
@@ -121,7 +121,7 @@ public final class DirectFileDescriptor extends FileDescriptor {
      * Buffers here are allocated with posix_memalign.
      *
      * You need to explicitly free the buffer created from here using the
-     *          {@link DirectFileDescriptorController#freeBuffer(java.nio.ByteBuffer)}.
+     *          {@link DirectFileDescriptorController#freeBuffer(ByteBuffer)}.
      *
      * @param size the size of the buffer.
      * @return the buffer allocated.

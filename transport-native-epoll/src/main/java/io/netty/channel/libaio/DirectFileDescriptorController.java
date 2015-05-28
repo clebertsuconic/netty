@@ -48,7 +48,9 @@ public class DirectFileDescriptorController {
     ByteBuffer context;
 
     /**
-     * The queue size here will use resources defined on etc. MAX_AIO.
+     * The queue size here will use resources defined on the kernel parameter
+     *    <a href="https://www.kernel.org/doc/Documentation/sysctl/fs.txt">fs.aio-max-nr</a> .
+     *
      * @param queueSize the size to be initialize on libaio io_queue_init.
      */
     public DirectFileDescriptorController(int queueSize) {
@@ -104,8 +106,8 @@ public class DirectFileDescriptorController {
      * @param max The maximum number of elements to receive.
      * @return Number of callbacks returned.
      *
-     * @see DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)
-     * @see DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)
+     * @see DirectFileDescriptor#write(long, int, ByteBuffer, Object)
+     * @see DirectFileDescriptor#read(long, int, ByteBuffer, Object)
      */
     public int poll(Object[] callbacks, int min, int max) {
         return poll(context, callbacks, min, max);

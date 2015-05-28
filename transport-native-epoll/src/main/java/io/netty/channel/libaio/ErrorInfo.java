@@ -17,13 +17,17 @@ package io.netty.channel.libaio;
 
 /**
  * In case of a failure the callback will be replaced by an instance of this class.
- * This will be created by the native layer on the rare event of a failure. *
+ * This will be created by the native layer on the rare event of a failure.
  */
 public final class ErrorInfo {
+
     private final Object callback;
     private final int error;
     private final String message;
 
+    /**
+     * Constructor called from the native layer during polling in case of failures.
+     */
     public ErrorInfo(Object callback, int error, String message) {
         this.callback = callback;
         this.error = error;
@@ -38,10 +42,16 @@ public final class ErrorInfo {
         return callback;
     }
 
+    /**
+     * The error that happened accordingly to errno (use man errno on linux for more information).
+     */
     public int error() {
         return error;
     }
 
+    /**
+     * The textual information about the error that happened.
+     */
     public String message() {
         return message;
     }
