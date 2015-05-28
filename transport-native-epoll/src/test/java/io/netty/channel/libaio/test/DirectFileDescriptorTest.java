@@ -151,8 +151,6 @@ public class DirectFileDescriptorTest {
 
         Assert.assertSame(callback, callbacks[0]);
 
-        fileDescriptor.read(3, 512, buffer, callback);
-
         for (int i = 0; i < 512; i++) {
             Assert.assertEquals('A', buffer.get());
         }
@@ -303,8 +301,16 @@ public class DirectFileDescriptorTest {
         fileDescriptor.write(0, 512, buffer, new CountClass());
         Assert.assertEquals(1, control.poll(callbacks, 1, 100));
 
+        CountClass errorCallback = new CountClass();
+        // odd positions will have failures through O_DIRECT
+        fileDescriptor.read(3, 512, buffer, errorCallback);
+        Assert.assertEquals(1, control.poll(callbacks, 1, 50));
+        Assert.assertTrue(callbacks[0] instanceof ErrorInfo);
+        Assert.assertSame(errorCallback, ((ErrorInfo) callbacks[0]).callback());
+
         // to help GC and the checkLeaks
         callbacks = null;
+        errorCallback = null;
 
         CountClass.checkLeaks();
 
