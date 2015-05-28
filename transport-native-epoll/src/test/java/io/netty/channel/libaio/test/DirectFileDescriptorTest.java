@@ -247,6 +247,16 @@ public class DirectFileDescriptorTest {
         boolean exceptionThrown = false;
 
         try {
+            // There is no space for a queue this huge, the native layer should throw the exception
+            DirectFileDescriptorController newController = new DirectFileDescriptorController(1000000);
+        } catch (RuntimeException e) {
+            exceptionThrown = true;
+        }
+
+        Assert.assertTrue(exceptionThrown);
+        exceptionThrown = false;
+
+        try {
             // this should throw an exception, we shouldn't be able to open a directory!
             control.newFile(temporaryFolder.getRoot());
         } catch (IOException expected) {

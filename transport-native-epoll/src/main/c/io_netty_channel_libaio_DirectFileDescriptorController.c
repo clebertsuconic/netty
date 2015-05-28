@@ -119,10 +119,12 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
     io_context_t libaioContext;
     int i = 0;
 
-    if (io_queue_init(queueSize, &libaioContext)) {
+    int res = io_queue_init(queueSize, &libaioContext);
+    if (res) {
         // Error, so need to release whatever was done before
-        throwRuntimeException(env, "Cannot initialize queue");
         free(libaioContext);
+
+        throwRuntimeException(env, exceptionMessage("Cannot initialize queue:", -res));
         return NULL;
     }
 
