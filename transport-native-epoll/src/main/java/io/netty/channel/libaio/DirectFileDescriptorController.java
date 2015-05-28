@@ -23,18 +23,18 @@ import java.nio.ByteBuffer;
 
 /**
  *
- * This class is used as an aggregator for the DirectFileDescriptor
+ * This class is used as an aggregator for the {@link DirectFileDescriptor}
  *
  * It holds native data, and it will share a libaio queue that can be used by multiple files.
  *
  * You need to use the poll methods to read the result of write and read submissions
  *
- * You also need to use the special buffer created by DirectfileDescriptor as you need special alignments
+ * You also need to use the special buffer created by {@link DirectFileDescriptor} as you need special alignments
  * when dealing with O_DIRECT files
  *
  * A Single controller can server multiple files. There's no need to create one controller per file * *
  *
- * Interesting reading for this: https://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics
+ * Interesting reading for this: <a href="https://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics"/>
  *
  */
 public class DirectFileDescriptorController {
@@ -60,6 +60,7 @@ public class DirectFileDescriptorController {
         }
     }
 
+    @Override
     protected void finalize() throws Throwable {
         super.finalize();
         close();
@@ -93,13 +94,15 @@ public class DirectFileDescriptorController {
      * Thread polling for any reason
      *
      * @param callbacks area to receive the callbacks passed on submission. In case of a failure you will see an
-     *                  @{link ErrorInfo} as an element. The size of this callback has to be >= max
+     *                  {@link ErrorInfo} as an element. The size of this callback has to be greater than the
+     *                  parameter max
+     *
      * @param min the minimum number of elements to receive. It will block until this is achieved
      * @param max The maximum number of elements to receive.
      * @return Number of callbacks returned
      *
-     * @see io.netty.channel.libaio.DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)
-     * @see io.netty.channel.libaio.DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)
+     * @see DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)
+     * @see DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)
      */
     public int poll(Object[] callbacks, int min, int max) {
         return poll(context, callbacks, min, max);
@@ -125,7 +128,7 @@ public class DirectFileDescriptorController {
     /**
      * Buffers for O_DIRECT need to use posix_memalign *
      *
-     * Documented at {@link io.netty.channel.libaio.DirectFileDescriptor#newBuffer(int)}
+     * Documented at {@link DirectFileDescriptor#newBuffer(int)}
      *
      * @param size
      * @param alignment
@@ -142,7 +145,7 @@ public class DirectFileDescriptorController {
     public static native void freeBuffer(ByteBuffer buffer);
 
     /**
-     * Documented at {@link io.netty.channel.libaio.DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)}*
+     * Documented at {@link DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)}*
      */
     static native void submitWrite(int fd,
                                    ByteBuffer libaioContext,
@@ -150,7 +153,7 @@ public class DirectFileDescriptorController {
                                    Object callback) throws IOException;
 
     /**
-     * Documented at {@link io.netty.channel.libaio.DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)}*
+     * Documented at {@link DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)}*
      */
     static native void submitRead(int fd,
                                   ByteBuffer libaioContext,
@@ -163,7 +166,7 @@ public class DirectFileDescriptorController {
      * This method will block until the min condition is satisfied on the poll
      *
      * The callbacks will include the original callback sent at submit (read or write).
-     * In case of error the elemnt will have an instance of {@link ErrorInfo}
+     * In case of error the element will have an instance of {@link ErrorInfo}
      */
     native int poll(ByteBuffer libaioContext, Object[] callbacks, int min, int max);
 }

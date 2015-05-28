@@ -19,10 +19,10 @@ package io.netty.channel.libaio;
  * In case of a failure the callback will be replaced by an instance of this class.
  * This will be created by the native layer on the rare event of a failure. *
  */
-public class ErrorInfo {
-    private Object callback;
-    private int error;
-    private String message;
+public final class ErrorInfo {
+    private final Object callback;
+    private final int error;
+    private final String message;
 
     public ErrorInfo(Object callback, int error, String message) {
         this.callback = callback;
@@ -34,15 +34,15 @@ public class ErrorInfo {
      * This will contain the original callback replaced by this failure.
      * @return
      */
-    public Object getCallback() {
+    public Object callback() {
         return callback;
     }
 
-    public int getError() {
+    public int error() {
         return error;
     }
 
-    public String getMessage() {
+    public String message() {
         return message;
     }
 

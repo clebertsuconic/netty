@@ -21,6 +21,6 @@ jobject Java_io_netty_channel_libaio_DirectFileDescriptorController_newContext(J
 void Java_io_netty_channel_libaio_DirectFileDescriptorController_deleteContext(JNIEnv* env, jclass clazz, jobject pointer);
 void Java_io_netty_channel_libaio_DirectFileDescriptorController_submitWrite(JNIEnv * env, jclass clazz, jint fileHandle, jobject contextPointer, jlong position, jint size, jobject bufferWrite, jobject callback);
 void Java_io_netty_channel_libaio_DirectFileDescriptorController_submitRead(JNIEnv * env, jclass clazz, jint fileHandle, jobject contextPointer, jlong position, jint size, jobject bufferWrite, jobject callback);
-jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_newAlignedBuffer(JNIEnv * env, jclass clazz, jint size, jint alignment);
+jobject Java_io_netty_channel_libaio_DirectFileDescriptorController_newAlignedBuffer(JNIEnv * env, jclass clazz, jint size, jint alignment);
 void Java_io_netty_channel_libaio_DirectFileDescriptorController_freeBuffer(JNIEnv * env, jclass clazz, jobject buffer);
 jint Java_io_netty_channel_libaio_DirectFileDescriptorController_poll(JNIEnv * env, jobject clazz, jobject libaioContext, jobjectArray callbacks, jint min, jint max);

@@ -114,8 +114,6 @@ static inline void * getBuffer(JNIEnv* env, jobject pointer ) {
     return (*env)->GetDirectBufferAddress(env, pointer);
 }
 
-
-
 JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_newContext(JNIEnv* env, jclass clazz, jint queueSize) {
 
     io_context_t libaioContext;
@@ -172,7 +170,6 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
     return bufferContext;
 }
 
-
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_deleteContext(JNIEnv* env, jclass clazz, jobject contextPointer) {
 
     int i;
@@ -194,7 +191,6 @@ JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControll
 
     free(theControl);
 }
-
 
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_close(JNIEnv* env, jclass clazz, jint fd) {
    if (close(fd) < 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Netty Project
+ * Copyright 2015 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -20,8 +20,8 @@
  * Buffers needs to be specially allocated as they need to be aligned to 512 or 4096
  *
  * Three main classes on this package:
- * {@link io.netty.channel.libaio.DirectFileDescriptorController} which will handle the native methods and the queue
- * {@link io.netty.channel.libaio.DirectFileDescriptor} which represents the file itself
- * {@link io.netty.channel.libaio.ErrorInfo} to be placed on the callback results in case of errors.
+ * {@link DirectFileDescriptorController} which will handle the native methods and the queue
+ * {@link DirectFileDescriptor} which represents the file itself
+ * {@link ErrorInfo} to be placed on the callback results in case of errors.
  */
 package io.netty.channel.libaio;

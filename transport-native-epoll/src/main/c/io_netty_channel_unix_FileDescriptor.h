@@ -17,6 +17,3 @@
 
 int Java_io_netty_channel_unix_FileDescriptor_close(JNIEnv* env, jclass clazz, jint fd);
 int Java_io_netty_channel_unix_FileDescriptor_open(JNIEnv* env, jclass clazz, jstring path);
-JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptor_freeContext
-  (JNIEnv *, jclass, jobject);
-

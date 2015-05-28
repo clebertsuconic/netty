@@ -33,7 +33,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * This test is using a different package from {@link io.netty.channel.libaio.DirectFileDescriptor}
+ * This test is using a different package from {@link DirectFileDescriptor}
  * as I need to validate public methods on the API
  */
 public class DirectFileDescriptorTest {
@@ -183,7 +183,7 @@ public class DirectFileDescriptorTest {
         Assert.assertTrue(callbacks[0] instanceof ErrorInfo);
 
         // Error condition
-        Assert.assertSame(((ErrorInfo) callbacks[0]).getCallback(), callback);
+        Assert.assertSame(((ErrorInfo) callbacks[0]).callback(), callback);
 
         System.out.println("Error:" + callbacks[0]);
 
