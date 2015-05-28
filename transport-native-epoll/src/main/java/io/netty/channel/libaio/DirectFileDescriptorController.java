@@ -23,18 +23,18 @@ import java.nio.ByteBuffer;
 
 /**
  *
- * This class is used as an aggregator for the {@link DirectFileDescriptor}
+ * This class is used as an aggregator for the {@link DirectFileDescriptor}.
  *
  * It holds native data, and it will share a libaio queue that can be used by multiple files.
  *
- * You need to use the poll methods to read the result of write and read submissions
+ * You need to use the poll methods to read the result of write and read submissions.
  *
  * You also need to use the special buffer created by {@link DirectFileDescriptor} as you need special alignments
- * when dealing with O_DIRECT files
+ * when dealing with O_DIRECT files.
  *
- * A Single controller can server multiple files. There's no need to create one controller per file * *
+ * A Single controller can server multiple files. There's no need to create one controller per file.
  *
- * Interesting reading for this: <a href="https://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics"/>
+ * Interesting reading for this: <a href="https://ext4.wiki.kernel.org/index.php/Clarifying_Direct_IO's_Semantics"/>.
  *
  */
 public class DirectFileDescriptorController {
@@ -42,17 +42,26 @@ public class DirectFileDescriptorController {
         Native.loadLibrary();
     }
 
-    /** the native context including the structure created */
+    /**
+     *  the native context including the structure created.
+     */
     ByteBuffer context;
 
     /**
-     * The queue size here will use resources defined on etc. MAX_AIO *
-     * @param queueSize
+     * The queue size here will use resources defined on etc. MAX_AIO.
+     * @param queueSize the size to be initialize on libaio io_queue_init.
      */
     public DirectFileDescriptorController(int queueSize) {
         this.context = newContext(queueSize);
     }
 
+    /**
+     * This is used to close the libaio queues and cleanup the native data used.
+     *
+     * It is unsafe to close the controller while you have pending writes or files open as
+     * this could cause core dumps or VM crashes.
+     * *
+     */
     public void close() {
         if (context != null) {
             deleteContext(context);
@@ -67,20 +76,14 @@ public class DirectFileDescriptorController {
     }
 
     /**
-     * It will open a new file using O_DIRECT *
-     * @param file
-     * @return
-     * @throws IOException
+     * It will open a new file using O_DIRECT.
      */
     public DirectFileDescriptor newFile(File file) throws IOException {
         return DirectFileDescriptor.from(file, context);
     }
 
     /**
-     * It will open a new file using O_DIRECT *
-     * @param file
-     * @return
-     * @throws IOException
+     * It will open a new file using O_DIRECT.
      */
     public DirectFileDescriptor newFile(String file) throws IOException {
         return DirectFileDescriptor.from(file, context);
@@ -88,18 +91,18 @@ public class DirectFileDescriptorController {
 
     /**
      * It will poll the libaio queue for results. It should block until min is reached
-     * Results are placed on the callback*
+     * Results are placed on the callback.
      *
      * This shouldn't be called concurrently. You should provide your own synchronization if you need more than one
-     * Thread polling for any reason
+     * Thread polling for any reason.
      *
      * @param callbacks area to receive the callbacks passed on submission. In case of a failure you will see an
      *                  {@link ErrorInfo} as an element. The size of this callback has to be greater than the
-     *                  parameter max
+     *                  parameter max.
      *
-     * @param min the minimum number of elements to receive. It will block until this is achieved
+     * @param min the minimum number of elements to receive. It will block until this is achieved.
      * @param max The maximum number of elements to receive.
-     * @return Number of callbacks returned
+     * @return Number of callbacks returned.
      *
      * @see DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)
      * @see DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)
@@ -109,15 +112,12 @@ public class DirectFileDescriptorController {
     }
 
     /**
-     * This is the queue for libaio, initialized with queueSize
-     *
-     * @param queueSize
+     * This is the queue for libaio, initialized with queueSize.
      */
     static native ByteBuffer newContext(int queueSize);
 
     /**
-     * Internal method to be used when closing the controller *
-     * @param buffer
+     * Internal method to be used when closing the controller.
      */
     static native void deleteContext(ByteBuffer buffer);
 
@@ -126,26 +126,19 @@ public class DirectFileDescriptorController {
     static native void close(int fd);
 
     /**
-     * Buffers for O_DIRECT need to use posix_memalign *
+     * Buffers for O_DIRECT need to use posix_memalign.
      *
-     * Documented at {@link DirectFileDescriptor#newBuffer(int)}
-     *
-     * @param size
-     * @param alignment
-     *
-     * @return
+     * Documented at {@link DirectFileDescriptor#newBuffer(int)}.
      */
     public static native ByteBuffer newAlignedBuffer(int size, int alignment);
 
     /**
-     * This will call posix free to release the inner buffer allocated at {@link #newAlignedBuffer(int, int)}
-     * *
-     * @param buffer
+     * This will call posix free to release the inner buffer allocated at {@link #newAlignedBuffer(int, int)}.
      */
     public static native void freeBuffer(ByteBuffer buffer);
 
     /**
-     * Documented at {@link DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)}*
+     * Documented at {@link DirectFileDescriptor#write(long, int, java.nio.ByteBuffer, Object)}.
      */
     static native void submitWrite(int fd,
                                    ByteBuffer libaioContext,
@@ -153,7 +146,7 @@ public class DirectFileDescriptorController {
                                    Object callback) throws IOException;
 
     /**
-     * Documented at {@link DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)}*
+     * Documented at {@link DirectFileDescriptor#read(long, int, java.nio.ByteBuffer, Object)}.
      */
     static native void submitRead(int fd,
                                   ByteBuffer libaioContext,
@@ -161,12 +154,11 @@ public class DirectFileDescriptorController {
                                   Object callback) throws IOException;
 
     /**
-     * Note: this shouldn't be done concurrently
-     * Note: depending on the usecase we could add timeout here
-     * This method will block until the min condition is satisfied on the poll
+     * Note: this shouldn't be done concurrently.
+     * This method will block until the min condition is satisfied on the poll.
      *
      * The callbacks will include the original callback sent at submit (read or write).
-     * In case of error the element will have an instance of {@link ErrorInfo}
+     * In case of error the element will have an instance of {@link ErrorInfo}.
      */
     native int poll(ByteBuffer libaioContext, Object[] callbacks, int min, int max);
 }
