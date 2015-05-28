@@ -204,7 +204,6 @@ JNIEXPORT int JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControlle
 
     const char* f_path = (*env)->GetStringUTFChars(env, path, 0);
 
-    //int res = open(f_path, O_WRONLY | O_CREAT | O_DIRECT, 0666);
     int res = open(f_path, O_RDWR | O_CREAT | O_DIRECT, 0666);
 
     (*env)->ReleaseStringUTFChars(env, path, f_path);
