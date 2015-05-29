@@ -38,4 +38,3 @@ JNIEXPORT int JNICALL Java_io_netty_channel_unix_FileDescriptor_open(JNIEnv* env
     }
     return res;
 }
-

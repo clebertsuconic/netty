@@ -42,9 +42,6 @@ struct io_control {
     // this is to guarantee the submits could be done concurrently with polling
     pthread_mutex_t iocbLock;
 
-    jclass errorInfoClass;
-    jmethodID errorInfoConstr;
-
     // a resuable pool of iocb
     struct iocb ** iocb;
     int queueSize;
@@ -53,7 +50,47 @@ struct io_control {
     int used;
 };
 
-static inline struct io_control * getIOControl(JNIEnv* env, jobject pointer ) {
+jclass errorInfoClass = NULL;
+jmethodID errorInfoConstr = NULL;
+
+/**
+  This is being invoked by Native.c /  JNI_OnLoad..
+
+  There is only one point of entrance of Loading the library,
+  this will be a hook so extra stuff that needs to be loaded here.
+*/
+void directFile_JNI_OnLoad(JNIEnv* env) {
+    errorInfoClass = (*env)->FindClass(env, "io/netty/channel/libaio/ErrorInfo");
+    if (errorInfoClass == NULL) {
+       return;
+    }
+
+    // The ErrorInfoClass is barely used. The VM would crash in the event of an error without this GlobalRef
+    // and if the class was unloaded from GC
+    errorInfoClass = (jclass)(*env)->NewGlobalRef(env, (jobject)errorInfoClass);
+
+    errorInfoConstr = (*env)->GetMethodID(env, errorInfoClass, "<init>", "(Ljava/lang/Object;ILjava/lang/String;)V");
+
+    if (errorInfoConstr == NULL) {
+       return;
+    }
+
+    /// The ErrorInfoClass is barely used. The VM would crash in the event of an error without this GlobalRef
+    errorInfoConstr = (jmethodID)(*env)->NewGlobalRef(env, (jobject)(errorInfoConstr));
+}
+
+void directFile_JNI_OnUnLoad(JNIEnv* env) {
+    // Deleting global refs so their classes can be GCed
+    if (errorInfoConstr != NULL) {
+        (*env)->DeleteGlobalRef(env, (jobject)errorInfoConstr);
+    }
+
+    if (errorInfoClass != NULL) {
+        (*env)->DeleteGlobalRef(env, (jobject)errorInfoClass);
+    }
+}
+
+static inline struct io_control * getIOControl(JNIEnv* env, jobject pointer) {
     struct io_control * ioControl = (struct io_control *) (*env)->GetDirectBufferAddress(env, pointer);
     return ioControl;
 }
@@ -62,26 +99,22 @@ static inline struct io_control * getIOControl(JNIEnv* env, jobject pointer ) {
  remove an iocb from the pool of IOCBs. Returns null if full
 */
 static inline struct iocb * getIOCB(struct io_control * control) {
-    pthread_mutex_lock(&(control->iocbLock));
-
     struct iocb * iocb = 0;
+
+    pthread_mutex_lock(&(control->iocbLock));
 
     #ifdef DEBUG
        fprintf (stderr, "getIOCB::used=%d, queueSize=%d, get=%d, put=%d\n", control->used, control->queueSize, control->iocbGet, control->iocbPut);
     #endif
 
-    if (control->used < control->queueSize)
-    {
+    if (control->used < control->queueSize) {
         control->used++;
         iocb = control->iocb[control->iocbGet++];
 
-        if (control->iocbGet >= control->queueSize)
-        {
+        if (control->iocbGet >= control->queueSize) {
            control->iocbGet = 0;
         }
-    }
-    else
-    {
+    } else {
         #ifdef DEBUG
             fprintf (stderr, "Could not find iocb\n");
         #endif
@@ -103,19 +136,20 @@ static inline void putIOCB(struct io_control * control, struct iocb * iocbBack) 
 
     control->used--;
     control->iocb[control->iocbPut++] = iocbBack;
-    if (control->iocbPut >= control->queueSize)
-    {
+    if (control->iocbPut >= control->queueSize) {
        control->iocbPut = 0;
     }
     pthread_mutex_unlock(&(control->iocbLock));
 }
 
-static inline void * getBuffer(JNIEnv* env, jobject pointer ) {
+static inline void * getBuffer(JNIEnv* env, jobject pointer) {
     return (*env)->GetDirectBufferAddress(env, pointer);
 }
 
+/**
+  Everything that is allocated here will be freed at deleteContext when the class is unloaded.
+*/
 JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_newContext(JNIEnv* env, jclass clazz, jint queueSize) {
-
     io_context_t libaioContext;
     int i = 0;
 
@@ -130,34 +164,13 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
 
     struct iocb ** iocb = (struct iocb **)malloc(sizeof(struct iocb *) * queueSize);
 
-    for (i = 0; i < queueSize; i++)
-    {
+    for (i = 0; i < queueSize; i++) {
        iocb[i] = (struct iocb *)malloc(sizeof(struct iocb));
     }
 
     struct io_event * events = (struct io_event *)malloc(sizeof(struct io_event) * queueSize);
 
     struct io_control * theControl = (struct io_control *) malloc(sizeof(struct io_control));
-
-    theControl->errorInfoClass = (*env)->FindClass(env, "io/netty/channel/libaio/ErrorInfo");
-    if (theControl->errorInfoClass == NULL)
-    {
-       return;
-    }
-
-
-    /// The ErrorInfoClass is barely used. The VM would crash in the event of an error without this GlobalRef
-    theControl->errorInfoClass = (jclass)(*env)->NewGlobalRef(env, (jobject)(theControl->errorInfoClass));
-
-    theControl->errorInfoConstr = (*env)->GetMethodID(env, theControl->errorInfoClass, "<init>", "(Ljava/lang/Object;ILjava/lang/String;)V");
-
-    if (theControl->errorInfoConstr == NULL)
-    {
-       return;
-    }
-
-    /// The ErrorInfoClass is barely used. The VM would crash in the event of an error without this GlobalRef
-    theControl->errorInfoConstr = (jmethodID)(*env)->NewGlobalRef(env, (jobject)(theControl->errorInfoConstr));
 
     theControl->ioContext = libaioContext;
     theControl->events = events;
@@ -168,24 +181,18 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
     theControl->used = 0;
     pthread_mutex_init(&(theControl->iocbLock), 0);
 
-    jobject bufferContext = (*env)->NewDirectByteBuffer(env, theControl, sizeof(struct io_control));
-    return bufferContext;
+    return (*env)->NewDirectByteBuffer(env, theControl, sizeof(struct io_control));
 }
 
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_deleteContext(JNIEnv* env, jclass clazz, jobject contextPointer) {
-
     int i;
     struct io_control * theControl = getIOControl(env, contextPointer);
     io_queue_release(theControl->ioContext);
 
     // Releasing each individual iocb
-    for (i = 0; i < theControl->queueSize; i++)
-    {
+    for (i = 0; i < theControl->queueSize; i++) {
        free(theControl->iocb[i]);
     }
-
-    (*env)->DeleteGlobalRef(env, (jobject)(theControl->errorInfoClass));
-    (*env)->DeleteGlobalRef(env, (jobject)(theControl->errorInfoConstr));
 
     free(theControl->iocb);
 
@@ -221,18 +228,15 @@ static inline void submit(JNIEnv * env, io_context_t ioContext,  struct iocb * i
     if (result < 0) {
         if (result == -EAGAIN) {
             throwIOException(env, "Not enough space on libaio queue");
-            return;
         }
         else {
             throwIOException(env, exceptionMessage("Error while submitting IO:", -result));
-            return;
         }
     }
 }
 
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_submitWrite
   (JNIEnv * env, jclass clazz, jint fileHandle, jobject contextPointer, jlong position, jint size, jobject bufferWrite, jobject callback) {
-
     struct io_control * theControl = getIOControl(env, contextPointer);
 
     struct iocb * iocb = getIOCB(theControl);
@@ -250,7 +254,6 @@ JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControll
 
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_submitRead
   (JNIEnv * env, jclass clazz, jint fileHandle, jobject contextPointer, jlong position, jint size, jobject bufferRead, jobject callback) {
-
     struct io_control * theControl = getIOControl(env, contextPointer);
 
     struct iocb * iocb = getIOCB(theControl);
@@ -263,13 +266,11 @@ JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControll
     io_prep_pread(iocb, fileHandle, getBuffer(env, bufferRead), size, position);
     iocb->data = (void *) (*env)->NewGlobalRef(env, callback);
 
-
     submit(env, theControl->ioContext, iocb);
 }
 
 JNIEXPORT jint JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_poll
   (JNIEnv * env, jobject obj, jobject contextPointer, jobjectArray callbacks, jint min, jint max) {
-
     int i = 0;
     struct io_control * theControl = getIOControl(env, contextPointer);
 
@@ -292,8 +293,8 @@ JNIEXPORT jint JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControll
             jstring jstrError = (*env)->NewStringUTF(env, strerror(-eventResult));
 
             jobject errorObject = (*env)->NewObject(env,
-                                                   theControl->errorInfoClass,
-                                                   theControl->errorInfoConstr,
+                                                   errorInfoClass,
+                                                   errorInfoConstr,
                                                    (jobject)(iocbp->data),
                                                    (jint)(-eventResult),
                                                    jstrError);
@@ -303,8 +304,7 @@ JNIEXPORT jint JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorControll
             }
 
             (*env)->SetObjectArrayElement(env, callbacks, i, errorObject);
-        }
-        else {
+        } else {
             (*env)->SetObjectArrayElement(env, callbacks, i, (jobject)iocbp->data);
         }
 
@@ -320,7 +320,7 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
 (JNIEnv * env, jclass clazz, jint size, jint alignment) {
     if (size % alignment) {
         throwRuntimeException(env, "Buffer size needs to be aligned to passed argument");
-        return 0;
+        return NULL;
     }
 
     // This will allocate a buffer, aligned by alignment.
@@ -331,17 +331,14 @@ JNIEXPORT jobject JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorContr
 
     if (result) {
         throwRuntimeException(env, exceptionMessage("Can't allocate posix buffer:", result));
-        return 0;
+        return NULL;
     }
 
-    jobject jbuffer = (*env)->NewDirectByteBuffer(env, buffer, size);
-
-    return jbuffer;
+    return (*env)->NewDirectByteBuffer(env, buffer, size);
 }
 
 JNIEXPORT void JNICALL Java_io_netty_channel_libaio_DirectFileDescriptorController_freeBuffer
   (JNIEnv * env, jclass clazz, jobject jbuffer) {
-
   	void *  buffer = (*env)->GetDirectBufferAddress(env, jbuffer);
   	free(buffer);
 }
